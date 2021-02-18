@@ -7,8 +7,8 @@
 
 # app_name= 'Accountsapp'
 
-urlpatterns=[
+# urlpatterns=[
 	
 	# path('registeruser/', account_view.RegisterUser, name='register_user'),
     
-] 
+# ] 

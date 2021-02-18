@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
-# from django.contrib.auth.forms import UserCreationForm
-from django.contrib import messages
-from .forms import UserRegisterForm  # we inhereted from UserCreationForm
-# from rest_framework.decorators import api_view
+# from django.shortcuts import render, redirect
+# # from django.contrib.auth.forms import UserCreationForm
+# from django.contrib import messages
+# from .forms import UserRegisterForm  # we inhereted from UserCreationForm
+# # from rest_framework.decorators import api_view
 # from rest_framework.response import Response
 # from rest_framework import status
 
