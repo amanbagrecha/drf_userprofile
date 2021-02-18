@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # my apps
-    'quickstart',
     'Accountsapp.apps.AccountsappConfig',
     # restframework
     'rest_framework',

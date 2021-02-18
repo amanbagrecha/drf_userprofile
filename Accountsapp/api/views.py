@@ -22,41 +22,6 @@ import json
 
 
 
-# Register
-# @api_view(['POST',])
-# def registration_view(request):
-
-#     if request.method == 'POST':
-#         data = {}
-#         email = request.data.get('email', '0').lower()
-#         serializer = RegistrationSerializer(data=request.data)
-
-#         if serializer.is_valid():
-#             account = serializer.save()  # returns accounts object from serializer we built
-#             data['response'] = 'successfully registered new user.'
-#             data['email'] = account.email
-#             data['username'] = account.username
-#             data['pk'] = account.pk
-#             token = Token.objects.get(user=account).key
-#             data['token'] = token
-#         else:
-#             data = serializer.errors
-#         return Response(data)
-
-# """example input field
-# {
-#     "email": "ajax@gmail.cpm",
-#     "username": "ajasx",
-#     "password":"ajax@1234",
-#     "password2":"ajax@1234"
-# }
-# """
-
-
-
-
-
-
 
 #start
 
@@ -180,6 +145,38 @@ def user_add_view(request):
 
 
 
+
+
+
+# Register
+# @api_view(['POST',])
+# def registration_view(request):
+
+#     if request.method == 'POST':
+#         data = {}
+#         email = request.data.get('email', '0').lower()
+#         serializer = RegistrationSerializer(data=request.data)
+
+#         if serializer.is_valid():
+#             account = serializer.save()  # returns accounts object from serializer we built
+#             data['response'] = 'successfully registered new user.'
+#             data['email'] = account.email
+#             data['username'] = account.username
+#             data['pk'] = account.pk
+#             token = Token.objects.get(user=account).key
+#             data['token'] = token
+#         else:
+#             data = serializer.errors
+#         return Response(data)
+
+# """example input field
+# {
+#     "email": "ajax@gmail.cpm",
+#     "username": "ajasx",
+#     "password":"ajax@1234",
+#     "password2":"ajax@1234"
+# }
+# """
 
 
 
