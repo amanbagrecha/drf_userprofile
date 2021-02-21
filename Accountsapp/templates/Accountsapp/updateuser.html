@@ -1,0 +1,161 @@
+{% extends "Accountsapp/base.html" %}
+
+
+  {% block content %}
+
+<!-- https://docs.djangoproject.com/en/3.1/topics/auth/default/ -->
+{% if request.user.is_authenticated %}
+
+
+	    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <span class="navbar-brand mr-4" >Update Profile</span>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{% url 'home-page' %}">Home</a>
+              <!-- <a class="nav-item nav-link" href="">About</a> -->
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <!-- <a class="nav-item nav-link" href="#">Login</a>
+              <a class="nav-item nav-link" href="#">Register</a> -->
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+
+
+
+<div class="container content-section">
+	<div class="d-flex justify-content-center" >
+      <div class="col-md-6 col-md-offset-3">
+        <div class="well well-sm">
+          <form class="form-horizontal" action="" method="PUT"  id="myForm" autocomplete="off">
+          	{% csrf_token %}
+              <!-- submission result -->
+            <div class="form-group">
+              <div class="col-md-6 text-left " id='message'>
+              </div>
+
+          <fieldset>
+            <legend class="text-center">Update your profile</legend>
+    
+            <!-- Name input-->
+            <div class="form-group">
+              <label class="col-md-3 control-label" for="username">Username</label>
+              <div class="col-md-9">
+                <input id="username" name="username" type="text" placeholder="Your username" class="form-control">
+              </div>
+            </div>
+    
+            <!-- Email input-->
+            <div class="form-group">
+              <label class="col-md-3 control-label" for="email">Your E-mail</label>
+              <div class="col-md-9">
+                <input id="email" name="email" type="email" placeholder="Your email" class="form-control">
+              </div>
+            </div>
+    
+
+ 
+    
+            <!-- Form actions -->
+            <div class="form-group">
+              <div class="col-md-6 text-left">
+                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+              </div>
+
+
+            </div>
+          </fieldset>
+          </form>
+        </div>
+      </div>
+	</div>
+</div>
+
+
+
+
+
+<script type="text/javascript">
+	
+
+			function getCookie(name) {
+		    var cookieValue = null;
+		    if (document.cookie && document.cookie !== '') {
+		        var cookies = document.cookie.split(';');
+		        for (var i = 0; i < cookies.length; i++) {
+		            var cookie = cookies[i].trim();
+		            // Does this cookie string begin with the name we want?
+		            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+		                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+		                break;
+		            }
+		        }
+		    }
+		    return cookieValue;
+		}
+		var csrftoken = getCookie('csrftoken');
+
+
+
+function fetchcall(event) {
+
+		event.preventDefault();
+		console.log('form submitted');
+	// var pk = document.getElementById("id").value;
+	var username = document.getElementById("username").value;
+	var email = document.getElementById("email").value;
+	// var password = document.getElementById("password").value;
+	var pk = '{{request.user.id}}';
+
+
+		var url = 'http://127.0.0.1:8000/drf_updateuser/'+ pk+ '?username='+ username + '&email=' + email  ;
+		// var formData = new FormData(this);
+
+			fetch(url, {
+				method:'GET',
+				headers:{
+					'Content-type':'application/json',
+					'X-CSRFToken':csrftoken,
+				}
+				// body:JSON.stringify({
+				// 	'email':email,
+				// 	'username':username,
+				// 	"password":password
+				// })
+			}).then(function(response){
+				// var status_code = response.status;
+				console.log("status code:" + response.status);
+				return response.json();
+			}).then(function(data){
+				document.getElementById('myForm').reset();
+				document.getElementById("message").innerHTML= JSON.stringify(data);
+				// document.getElementById("statuscode").innerHTML = status_code;
+			}).catch(function(error){
+			console.error(error);
+		});
+
+
+
+	}
+			
+	var myForm = document.getElementById("myForm");
+		// console.log(username, password, myForm);
+	myForm.addEventListener('submit', fetchcall);
+	
+
+
+
+
+</script>
+
+{% endif %}
+{% endblock %}

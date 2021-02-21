@@ -1,14 +1,14 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view , permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
 from django.contrib.auth import authenticate
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication, BasicAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
-from .serializers import RegistrationSerializer 
+from . import serializers 
 from Accountsapp.models import MyAccount
 from rest_framework.authtoken.models import Token
 
@@ -20,20 +20,29 @@ from rest_framework.parsers import JSONParser
 from django.core.exceptions import ObjectDoesNotExist
 import json
 
-
+from django.shortcuts import render
 
 
 #start
 
 
-
+# session authentication allows users to login and have a session id for that session to access all the pages while we are loged in
+# having authentication_class does not work in postman for some reason. only when we remove @authentication_classes do we get acess else it shows token not provided.
 # get all users
 @api_view(["GET"])
 @csrf_exempt
+# @permission_classes([IsAuthenticated,])
+# @authentication_classes([SessionAuthentication, BasicAuthentication])
 def get_users(request):
-    user_profile = MyAccount.objects.all() # additional filter: filter(added_by=request.user)
-    serializer = RegistrationSerializer(user_profile, many=True)
-    return JsonResponse({'user_profile': serializer.data}, safe=False, status=status.HTTP_200_OK)
+    # print(request.user.is_admin)
+    # if request.user.is_admin:
+    try:
+
+        user_profile = MyAccount.objects.all() # additional filter: filter(added_by=request.user)
+        serializer = serializers.RegistrationSerializer(user_profile, many=True)
+        return Response( {'USER_PROFILE':serializer.data}, status= status.HTTP_200_OK)
+    except ObjectDoesNotExist:
+        return JsonResponse({'Response': 'You do not have authorization to access this page'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 
@@ -48,16 +57,16 @@ def get_given_user(request, pk):
         return JsonResponse({"missing": "The requested object does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':  # not necessary here
-        serializer = RegistrationSerializer(user_profile)
+        serializer = serializers.RegistrationSerializer(user_profile)
         token = Token.objects.get(user=user_profile).key
         return JsonResponse({'given_user_profile': serializer.data, 'token':token})
    
 
 
 # update user
-@api_view(["PUT",]) # have to first request via get, only then put
+@api_view(["PUT","GET"]) # have to first request via get, only then put
 @csrf_exempt
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated,])
 def update_user(request, pk):
     try:
         user_profile = MyAccount.objects.get(id=pk)
@@ -65,22 +74,26 @@ def update_user(request, pk):
         return Response({'response': "given object does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
     user = request.user
-    print(user, user_profile.email, user_profile)
+    # print(user, user_profile.password)
     # this works only when authentication token is passed
-    if user_profile != user:
-        return JsonResponse({'response':"You don't have permission to edit that."}, safe=False, status=status.HTTP_401_UNAUTHORIZED)
+    # if user_profile != user:
+    #     return JsonResponse({'response':"You don't have permission to edit that."}, safe=False, status=status.HTTP_401_UNAUTHORIZED)
         
-
-    data =  {i:j for i,j in request.query_params.items()}
+    # doing it with serializer, we have to pass all the data and that is troblesome. so instead using update method
     try:
+        data =  {i:j for i,j in request.query_params.items()}
+        # print(data)
         MyAccount.objects.filter(id=pk).update(**data)  #retuns 1 or 0; using get() returns single object, and that is why update doesnt work
         user_profile = MyAccount.objects.get(id=pk)
-        serializer = RegistrationSerializer(user_profile)
+        # print(user_profile)
+        serializer = serializers.UpdateSerializer(user_profile)
         return JsonResponse({'user_update': serializer.data}, safe=False, status=status.HTTP_200_OK)  # input must be json object. user_profile wont respond
+
     except ObjectDoesNotExist as e:
         return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
     except Exception:
         return JsonResponse({'error': 'Something terrible went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
@@ -117,7 +130,7 @@ def delete_user(request, pk):
 @api_view(['POST'])
 def user_add_view(request):
 
-        serializer = RegistrationSerializer( data=request.data)
+        serializer = serializers.RegistrationSerializer( data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -126,9 +139,6 @@ def user_add_view(request):
 
 
 # end
-
-
-
 
 
 
@@ -143,6 +153,75 @@ def user_add_view(request):
 """
 
 
+
+
+# get token
+@api_view(["POST"])
+def drflogin(request):
+    username = request.data.get("email")
+    password = request.data.get("password")
+
+    account = authenticate(email=username, password=password)
+    if not account:
+        return Response({"error": "Login failed"}, status=status.HTTP_401_UNAUTHORIZED)
+
+    token, _ = Token.objects.get_or_create(user=account)
+    # print(account, username, password, request.session)
+    return Response({"response" : "Successfully authenticated",  "pk": account.pk, "email": username.lower(), "token": token.key })
+
+    # notes
+    # also contains sessionid for each time a new request is sent.
+    # request.POST returns empty string as DRF does not have POST, JUST PUT, patch
+    # authenticate(email=email, password=password)  # returns none if not authenticated or invalid email and password
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # @api_view(['POST','GET'])
+# @csrf_exempt
+# def getToken(request):
+#     context = {}
+#     # print(request.session)
+#     print(request.data) # request.POST returns empty string as DRF does not have POST, JUST PUT, patch
+#     email = request.data.get('email')
+#     password = request.data.get('password')
+#     print(email, password) 
+#     account = authenticate(email=email, password=password)  # returns none if not authenticated or invalid email and password
+#     print(account)
+#     if account:
+#         try:
+#             token = Token.objects.get(user=account)
+#         except Token.DoesNotExist:
+#             token = Token.objects.create(user=account)
+        
+#         context['response'] = 'Successfully authenticated.'
+#         context['pk'] = account.pk
+#         context['email'] = email.lower()
+#         context['token'] = token.key
+#     else:
+#         context['provide'] = 'email and password'
+#         context['response'] = 'Error'
+#         context['error_message'] = 'Invalid credentials'
+
+#     return Response(context)
 
 
 
@@ -179,7 +258,33 @@ def user_add_view(request):
 # """
 
 
+# LOGIN
+# Response: https://gist.github.com/mitchtabian/8e1bde81b3be342853ddfcc45ec0df8a
+# URL: http://127.0.0.1:8000/api/account/login
 
+# class ObtainAuthTokenView(APIView):
 
+#     authentication_classes = []
+#     permission_classes = []
 
+#     def post(self, request):
+#         context = {}
 
+#         email = request.POST.get('username')
+#         password = request.POST.get('password')
+#         account = authenticate(email=email, password=password)
+#         if account:
+#             try:
+#                 token = Token.objects.get(user=account)
+#             except Token.DoesNotExist:
+#                 token = Token.objects.create(user=account)
+#             context['response'] = 'Successfully authenticated.'
+#             context['pk'] = account.pk
+#             context['email'] = email.lower()
+#             context['token'] = token.key
+#         else:
+#             context['provide'] = 'email and password'
+#             context['response'] = 'Error'
+#             context['error_message'] = 'Invalid credentials'
+
+#         return Response(context)

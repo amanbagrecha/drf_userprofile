@@ -17,6 +17,8 @@ class MyAccountManager(BaseUserManager):
 			raise ValueError('Users must have an email address')
 		if not username:
 			raise ValueError('Users must have a username')
+		# if not is_admin:
+		# 	raise ValueError('User must select an option')
 
 		user = self.model(
 			email=self.normalize_email(email),
@@ -32,6 +34,7 @@ class MyAccountManager(BaseUserManager):
 			email=self.normalize_email(email),
 			password=password,
 			username=username,
+			
 		)
 		user.is_admin = True
 		user.is_staff = True
@@ -53,7 +56,7 @@ class MyAccount(AbstractBaseUser):
 
 	USERNAME_FIELD = 'email'   # username_field is the one which should be unique and will be compared by django for not creating multiple users with same email.
 
-	REQUIRED_FIELDS = ['username']
+	REQUIRED_FIELDS = ['username'] 
 
 	objects = MyAccountManager()
 
