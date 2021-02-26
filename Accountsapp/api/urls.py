@@ -2,6 +2,7 @@ from django.urls import path, include
 from . import views as drf_views
 # from rest_framework.authtoken.views import obtain_auth_token
 
+
 app_name = 'Accountsapp'
 
 urlpatterns = [
@@ -13,5 +14,8 @@ urlpatterns = [
     path('drf_adduser/', drf_views.user_add_view, name= 'drf_adduser'),
     # path('drf_login/', drf_views.ObtainAuthTokenView.as_view(), name="drf_login"),  # we built our own view to login and return token if it exist or create one if account exist but not the token
     path('drf_login/', drf_views.drflogin, name='drf_login'),
-    path('accounts/', include('django.contrib.auth.urls')),
+    # path('accounts/', include('django.contrib.auth.urls')), # django built in
+    
 ]
+
+

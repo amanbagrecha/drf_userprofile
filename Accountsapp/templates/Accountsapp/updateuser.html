@@ -4,7 +4,7 @@
   {% block content %}
 
 <!-- https://docs.djangoproject.com/en/3.1/topics/auth/default/ -->
-{% if request.user.is_authenticated %}
+{% if request.user.auth_token.key %}
 
 
 	    <header class="site-header">
@@ -21,8 +21,8 @@
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <!-- <a class="nav-item nav-link" href="#">Login</a>
-              <a class="nav-item nav-link" href="#">Register</a> -->
+              <a class="nav-item nav-link" href="{% url 'logoutuser' %}">Logout</a>
+              <!-- <a class="nav-item nav-link" href="#">Register</a> -->
             </div>
           </div>
         </div>
@@ -36,7 +36,7 @@
 	<div class="d-flex justify-content-center" >
       <div class="col-md-6 col-md-offset-3">
         <div class="well well-sm">
-          <form class="form-horizontal" action="" method="PUT"  id="myForm" autocomplete="off">
+          <form class="form-horizontal" action="{% url 'home-page' %}" method="PUT"  id="myForm" autocomplete="off">
           	{% csrf_token %}
               <!-- submission result -->
             <div class="form-group">
@@ -125,6 +125,7 @@ function fetchcall(event) {
 				headers:{
 					'Content-type':'application/json',
 					'X-CSRFToken':csrftoken,
+          'Authorization': 'Token ' + '{{ request.user.auth_token.key }}',
 				}
 				// body:JSON.stringify({
 				// 	'email':email,
@@ -132,12 +133,18 @@ function fetchcall(event) {
 				// 	"password":password
 				// })
 			}).then(function(response){
-				// var status_code = response.status;
 				console.log("status code:" + response.status);
 				return response.json();
 			}).then(function(data){
 				document.getElementById('myForm').reset();
 				document.getElementById("message").innerHTML= JSON.stringify(data);
+
+        if (data.response == "success"){
+          
+							(function() {
+								window.location = '{% url "home-page"  %}';
+							})();
+        }
 				// document.getElementById("statuscode").innerHTML = status_code;
 			}).catch(function(error){
 			console.error(error);
@@ -156,6 +163,9 @@ function fetchcall(event) {
 
 
 </script>
+
+
+
 
 {% endif %}
 {% endblock %}

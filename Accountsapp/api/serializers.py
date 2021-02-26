@@ -40,10 +40,16 @@ class UpdateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = MyAccount
 		# mention the fields you want to display when request is sent. 
-		fields = ['id','email', 'username']
+		fields = ['id', 'username', 'email']
 		extra_kwargs = {
 				'password': {'read_only': True},  # tells django to not display the password for others to see. read_only also means it cannot be changed. 
-		}	
+		}
+
+
+
+
+
+
 
 
 

@@ -17,8 +17,8 @@
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <!-- <a class="nav-item nav-link" href="#">Login</a>
-              <a class="nav-item nav-link" href="#">Register</a> -->
+              <!-- <a class="nav-item nav-link" href="">Logout</a> -->
+              <!-- <a class="nav-item nav-link" href="#">Register</a> -->
             </div>
           </div>
         </div>
@@ -42,11 +42,11 @@
 	    
 
 	    
-	            <!-- Email input-->
+	            <!-- username input-->
 	            <div class="form-group">
-	              <label class="col-md-3 control-label" for="email">Your E-mail</label>
+	              <label class="col-md-3 control-label" for="email">Your username</label>
 	              <div class="col-md-9">
-	                <input id="email" name="email" type="email" placeholder="Your email" class="form-control">
+	                <input id="email" name="email" type="text" placeholder="Your username" class="form-control">
 	              </div>
 	            </div>
 	    
@@ -64,7 +64,17 @@
 	              <div class="col-md-6 text-left">
 	                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
 	              </div>
-
+			        <div class="form-group col-md-6 pt-4 ">
+			            <small class="text-muted">
+			                Need An Account? <a class="ml-2" href="{% url 'registeruser' %}">Sign Up Now</a>
+			            </small>
+			             <div class="container">
+			             <small class="text-muted  pt-2">
+			                <a class="ml-2" href="{% url 'reset_password' %}">Forgot Password? </a>
+			            </small>
+			            </div>
+			        </div>
+			    </div>
 
 	            </div>
 	          </fieldset>
@@ -112,7 +122,8 @@ function fetchcall(event) {
 	var password = document.getElementById("password").value;
 	// var password2 = document.getElementById("password2").value;
 
-
+		
+		// console.log(token)
 		var url = 'http://127.0.0.1:8000/drf_login/';
 		// var formData = new FormData(this);
 
@@ -122,29 +133,31 @@ function fetchcall(event) {
 				headers:{
 					'Content-type':'application/json',
 					'X-CSRFToken':csrftoken,
+					
 				},
 				body:JSON.stringify({
 					'email':email,
-					"password":password
+					"password":password,
+					'username':email
 				})
 			}
 			).then(function(response){
-				// store_response = response;
+				store_response = response;
+				console.log(response);
 				return response.json();
 			}).then(function(data){
-
+				// console.log('Authorization:'+ 'Token ' +  request.user.auth_token.key  )	
 				document.getElementById('myForm').reset();
 				document.getElementById("message").innerHTML= JSON.stringify(data);
-				// data_user = data;
-
-				// go-to home page if login sucessful
+				// console.log(data.token)
 				if (data.token) {
 
-				(function() {
-					window.location = '{% url "home-page"  %}';
-				})();
+							(function() {
+								window.location = '{% url "home-page"  %}';
+							})();
 
-				}
+							}
+							
 			}).catch(function(error){
 			console.error(error);
 		});

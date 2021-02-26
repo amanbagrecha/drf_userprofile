@@ -1,11 +1,8 @@
 from django.shortcuts import render, redirect
-# # from django.contrib.auth.forms import UserCreationForm
-# from django.contrib import messages
-# from .forms import UserRegisterForm  # we inhereted from UserCreationForm
-# # from rest_framework.decorators import api_view
-# from rest_framework.response import Response
 from rest_framework import status
 
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
 
 
 
@@ -13,21 +10,33 @@ def show_users(request):
     return render(request, "Accountsapp/showusers.html", {'Title': "Users List"})
 
 def register_user(request):
+	# if request.user.is_authenticated:
 	return render(request, "Accountsapp/RegisterUser.html", {'Title': "Register new user"})
 
 
 
 def update_user(request):
-	return render(request, "Accountsapp/updateuser.html", {'Title': "Update User"})
+	if request.user.is_authenticated:
+		return render(request, "Accountsapp/updateuser.html", {'Title': "Update User"})
+	else:
+		return redirect('loginuser')
 
 
 def login_user(request):
+	if request.user.is_authenticated:
+		return redirect('home-page')
 	return render(request, "Accountsapp/loginuser.html", {'Title': "Login User"})
 
+
+@login_required(login_url='loginuser')
 def home_page(request):
+	# print(request.META.get('HTTP_AUTHORIZATION') )
 	return render(request, "AccountsApp/home.html", {'Title': "Home Page"})
 
 
+def logout_user(request):
+	logout(request)
+	return redirect('loginuser')
 
 
 
@@ -61,10 +70,11 @@ def home_page(request):
 
 
 
-
-
-
-
+# # from django.contrib.auth.forms import UserCreationForm
+# from django.contrib import messages
+# from .forms import UserRegisterForm  # we inhereted from UserCreationForm
+# # from rest_framework.decorators import api_view
+# from rest_framework.response import Response
 
 
 

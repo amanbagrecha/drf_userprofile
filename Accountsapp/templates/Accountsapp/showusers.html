@@ -2,23 +2,27 @@
 
 
   {% block content %}
-	{% if request.user.is_admin %}
+
+	
+	{% if request.user.auth_token.key and request.user.is_authenticated %}
+
+
 	    <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
-          <a class="navbar-brand mr-4" href="{% url 'registeruser' %}">All users </a>
+          <span class="navbar-brand mr-4" href="{% url 'registeruser' %}">All users </span>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <!-- <a class="nav-item nav-link" href="">Home</a> -->
+              <a class="nav-item nav-link" href="{% url 'home-page' %}">Home</a>
               <!-- <a class="nav-item nav-link" href="">About</a> -->
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <!-- <a class="nav-item nav-link" href="#">Login</a>
-              <a class="nav-item nav-link" href="#">Register</a> -->
+              <a class="nav-item nav-link" href="{% url 'logoutuser' %}">Logout</a>
+              <!-- <a class="nav-item nav-link" href="#">Register</a> -->
             </div>
           </div>
         </div>
@@ -49,27 +53,56 @@
 
 
 </div>
+
+
+
+
 <script type="text/javascript">
 
+      function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
 
-showusers();
+
+
 		function showusers(){
+      url = 'http://127.0.0.1:8000/drf_users/';
+      fetch(url, 
+      {
+        method:'GET',
+        headers:{
+          'Content-type':'application/json',
+          'Authorization': 'Token ' + '{{ request.user.auth_token.key }}',
+          'X-CSRFToken':csrftoken
+        }
+      }
+      ).then(function(resp){
 
-
-			fetch('http://127.0.0.1:8000/drf_users/')
-			.then(function(resp){
-
+          console.log(resp);
+          // console.log();
 			return resp.json();	
 
 
 			})
 			.then(function(data){
 			var users= document.getElementById("users");
-
-				for (x in (data['USER_PROFILE'])  ){
+        // console.log('');
+				for (var x in data['USER_PROFILE'] ){
 						// returns emails
 					// users.innerHTML += JSON.stringify(data['USER_PROFILE'][x]);
-
 					toinsert = (data['USER_PROFILE'][x]);
 
 					
@@ -90,11 +123,15 @@ showusers();
 			});
 
 		};
+
+    showusers();
 </script>
 
-{% else %}
 
-	    <header class="site-header">
+{% elif request.user.is_authenticated %}
+      
+
+      <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
           <a class="navbar-brand mr-4" href="#">Access denied </a>
@@ -108,20 +145,48 @@ showusers();
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <!-- <a class="nav-item nav-link" href="#">Login</a>
-              <a class="nav-item nav-link" href="#">Register</a> -->
+              <!-- <a class="nav-item nav-link" href="">Login</a> -->
+              <!-- <a class="nav-item nav-link" href="">Register</a> -->
             </div>
           </div>
         </div>
       </nav>
     </header>
-	
-		<div class="content-section container " align='center' >
-		<h1>403</h1>
-		<h2>Not this time, access forbidden!</h2>
-		</div>
+  
+    <div class="content-section container " align='center' >
+    <h1>403</h1>
+    <h2>Not this time, access forbidden!</h2>
+    </div> 
 
 
+{% else %}
+
+
+      <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <a class="navbar-brand mr-4" href="#">Access denied </a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <!-- <a class="nav-item nav-link" href="">About</a> -->
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{%  url 'loginuser' %}">Login</a>
+              <a class="nav-item nav-link" href="{%  url 'registeruser' %}">Register</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+  
+    <div class="content-section container " align='center' >
+    <h1>403</h1>
+    <h2>Not this time, access forbidden!</h2>
+    </div>
 
 {% endif %}
 {% endblock %}

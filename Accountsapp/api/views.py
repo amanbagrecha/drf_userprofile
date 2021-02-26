@@ -23,6 +23,10 @@ import json
 from django.shortcuts import render
 
 
+
+from django.contrib.auth import login 
+from django.contrib.auth.decorators import login_required
+
 #start
 
 
@@ -31,13 +35,11 @@ from django.shortcuts import render
 # get all users
 @api_view(["GET"])
 @csrf_exempt
-# @permission_classes([IsAuthenticated,])
-# @authentication_classes([SessionAuthentication, BasicAuthentication])
+@permission_classes([IsAuthenticated,])
+@authentication_classes([TokenAuthentication])
 def get_users(request):
-    # print(request.user.is_admin)
     # if request.user.is_admin:
     try:
-
         user_profile = MyAccount.objects.all() # additional filter: filter(added_by=request.user)
         serializer = serializers.RegistrationSerializer(user_profile, many=True)
         return Response( {'USER_PROFILE':serializer.data}, status= status.HTTP_200_OK)
@@ -46,9 +48,13 @@ def get_users(request):
 
 
 
+
+
 # get given user
 @api_view(['GET'])
 @csrf_exempt
+@permission_classes([IsAuthenticated,])
+@authentication_classes([TokenAuthentication])
 def get_given_user(request, pk):
     
     try:
@@ -63,31 +69,45 @@ def get_given_user(request, pk):
    
 
 
-# update user
-@api_view(["PUT","GET"]) # have to first request via get, only then put
+# add user
 @csrf_exempt
-# @permission_classes([IsAuthenticated,])
+# @permission_classes([IsAuthenticated])
+@api_view(['POST'])
+def user_add_view(request):
+        # print(request.data)
+        serializer = serializers.RegistrationSerializer( data=request.data)
+        if serializer.is_valid():
+            account = serializer.save()
+            token, _ = Token.objects.get_or_create(user=account)
+            return Response(serializer.data, status=status.HTTP_201_CREATED,  headers={'Authorization': 'Token ' + token.key})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# update user
+@api_view(["PUT",'GET']) # have to first request via get, only then put
+@csrf_exempt
+@permission_classes([IsAuthenticated,])
+@authentication_classes([TokenAuthentication])
 def update_user(request, pk):
+
     try:
         user_profile = MyAccount.objects.get(id=pk)
     except ObjectDoesNotExist:
         return Response({'response': "given object does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
     user = request.user
-    # print(user, user_profile.password)
-    # this works only when authentication token is passed
-    # if user_profile != user:
-    #     return JsonResponse({'response':"You don't have permission to edit that."}, safe=False, status=status.HTTP_401_UNAUTHORIZED)
-        
-    # doing it with serializer, we have to pass all the data and that is troblesome. so instead using update method
     try:
         data =  {i:j for i,j in request.query_params.items()}
-        # print(data)
-        MyAccount.objects.filter(id=pk).update(**data)  #retuns 1 or 0; using get() returns single object, and that is why update doesnt work
-        user_profile = MyAccount.objects.get(id=pk)
-        # print(user_profile)
-        serializer = serializers.UpdateSerializer(user_profile)
-        return JsonResponse({'user_update': serializer.data}, safe=False, status=status.HTTP_200_OK)  # input must be json object. user_profile wont respond
+        print(data)
+        serializer = serializers.UpdateSerializer(user_profile, data=data)
+        if serializer.is_valid():
+            # print(serializer)
+            user= serializer.save()
+            token, _ = Token.objects.get_or_create(user=user)
+            # print(user.auth_token.key)
+            return Response({"response": "success", 'data' :serializer.data}, status=status.HTTP_201_CREATED,  headers={'Authorization': 'Token ' + token.key})
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except ObjectDoesNotExist as e:
         return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
@@ -102,6 +122,7 @@ def update_user(request, pk):
 @api_view(["DELETE",'GET']) # have to first request via `get`, only then `put`
 @csrf_exempt
 @permission_classes([IsAuthenticated])
+@authentication_classes([TokenAuthentication])
 def delete_user(request, pk):
 
     try:
@@ -124,21 +145,97 @@ def delete_user(request, pk):
 
 
 
-# add user
-@csrf_exempt
-# @permission_classes([IsAuthenticated])
-@api_view(['POST'])
-def user_add_view(request):
 
-        serializer = serializers.RegistrationSerializer( data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# login view and get token
+@api_view(["POST", ])
+def drflogin(request):
+
+    # if request.method =="GET":
+    #     return render(request, "AccountsApp/loginuser.html")
+    email = request.data.get("email")
+    username = request.data.get("username")
+    password = request.data.get("password")
+    account = MyAccount.objects.filter(email=email) | MyAccount.objects.filter(username=username)
+    if not account:
+        return Response({"error": "Login failed"}, status=status.HTTP_401_UNAUTHORIZED)
+    account = authenticate(email=account[0].email, password=password)
+    # request.user.auth_token.key also returns token key
+    token, _ = Token.objects.get_or_create(user=account)
+    login(request,account)  #  https://docs.djangoproject.com/en/3.1/topics/auth/default/#how-to-log-a-user-in
+    renderer= Response({"response" : "Successfully authenticated",  "pk": account.pk, "username": account.username, "token": token.key }, template_name= "Accountsapp/loginuser.html", headers={'Authorization': 'Token ' + token.key})
+    # renderer = render(request, "AccountsApp/loginuser.html", {'Authorization': 'Token ' + token.key})
+    # renderer['Authorization'] = 'Token ' + token.key # pass to header
+    return renderer
+   
+
+    # notes
+    # also contains sessionid for each time a new request is sent.
+    # request.POST returns empty string as DRF does not have POST, JUST PUT, patch
+    # authenticate(email=email, password=password)  # returns none if not authenticated or invalid email and password
 
 
 
-# end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -155,33 +252,23 @@ def user_add_view(request):
 
 
 
-# get token
-@api_view(["POST"])
-def drflogin(request):
-    username = request.data.get("email")
-    password = request.data.get("password")
-
-    account = authenticate(email=username, password=password)
-    if not account:
-        return Response({"error": "Login failed"}, status=status.HTTP_401_UNAUTHORIZED)
-
-    token, _ = Token.objects.get_or_create(user=account)
-    # print(account, username, password, request.session)
-    return Response({"response" : "Successfully authenticated",  "pk": account.pk, "email": username.lower(), "token": token.key })
-
-    # notes
-    # also contains sessionid for each time a new request is sent.
-    # request.POST returns empty string as DRF does not have POST, JUST PUT, patch
-    # authenticate(email=email, password=password)  # returns none if not authenticated or invalid email and password
 
 
+# update user
 
+    # print(user, user_profile.password)
+    # this works only when authentication token is passed
+    # if user_profile != user:
+    #     return JsonResponse({'response':"You don't have permission to edit that."}, safe=False, status=status.HTTP_401_UNAUTHORIZED)
+        
+    # doing it with serializer, we have to pass all the data and that is troblesome. so instead using update method
+        # print(data)
 
-
-
-
-
-
+    #     MyAccount.objects.filter(id=pk).update(**data)  #retuns 1 or 0; using get() returns single object, and that is why update doesnt work
+    #     user_profile = MyAccount.objects.get(id=pk)
+    #     # print(user_profile)
+    #     serializer = serializers.UpdateSerializer(user_profile)
+    #     return JsonResponse({'user_update': serializer.data}, safe=False, status=status.HTTP_200_OK)  # input must be json object. user_profile wont respond
 
 
 
