@@ -1,0 +1,177 @@
+{% extends "Accountsapp/base.html" %}
+
+
+
+  {% block content %}
+	    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <a class="navbar-brand mr-4" href="{% url 'registeruser' %}">Log in </a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <!-- <a class="nav-item nav-link" href="">Home</a> -->
+              <!-- <a class="nav-item nav-link" href="">About</a> -->
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <!-- <a class="nav-item nav-link" href="">Logout</a> -->
+              <!-- <a class="nav-item nav-link" href="#">Register</a> -->
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+
+	<div class="container content-section">
+		<div class="d-flex justify-content-center" >
+	      <div class="col-md-6 col-md-offset-3">
+	        <div class="well well-sm">
+	          <form class="form-horizontal" action="" method="post"  id="myForm" autocomplete="off">
+	          	{% csrf_token %}
+	              <!-- submission result -->
+	            <div class="form-group">
+	              <div class="col-md-6 text-left " id='message'>
+	              </div>
+
+	          <fieldset>
+	            <legend class="text-center">Login</legend>
+	    
+
+	    
+	            <!-- username input-->
+	            <div class="form-group">
+	              <label class="col-md-3 control-label" for="email">Your username</label>
+	              <div class="col-md-9">
+	                <input id="email" name="email" type="text" placeholder="Your username" class="form-control">
+	              </div>
+	            </div>
+	    
+	            <!-- password body -->
+	            <div class="form-group">
+	              <label class="col-md-3 control-label" for="password">Password</label>
+	              <div class="col-md-9">
+	                <input id="password" name="password" type="password" placeholder="Your password" class="form-control">
+	              </div>
+	            </div>
+	  
+	    
+	            <!-- Form actions -->
+	            <div class="form-group">
+	              <div class="col-md-6 text-left">
+	                <button type="submit" class="btn btn-primary btn-lg">Submit</button>
+	              </div>
+			        <div class="form-group col-md-6 pt-4 ">
+			            <small class="text-muted">
+			                Need An Account? <a class="ml-2" href="{% url 'registeruser' %}">Sign Up Now</a>
+			            </small>
+			             <div class="container">
+			             <small class="text-muted  pt-2">
+			                <a class="ml-2" href="{% url 'reset_password' %}">Forgot Password? </a>
+			            </small>
+			            </div>
+			        </div>
+			    </div>
+
+	            </div>
+	          </fieldset>
+	          </form>
+	        </div>
+	      </div>
+		</div>
+	</div>
+
+
+
+
+
+
+
+
+<script type="text/javascript">
+	
+
+			function getCookie(name) {
+		    var cookieValue = null;
+		    if (document.cookie && document.cookie !== '') {
+		        var cookies = document.cookie.split(';');
+		        for (var i = 0; i < cookies.length; i++) {
+		            var cookie = cookies[i].trim();
+		            // Does this cookie string begin with the name we want?
+		            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+		                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+		                break;
+		            }
+		        }
+		    }
+		    return cookieValue;
+		}
+		var csrftoken = getCookie('csrftoken');
+
+
+
+function fetchcall(event) {
+
+		event.preventDefault();
+		console.log('form submitted');
+	// var username = document.getElementById("username").value;
+	var email = document.getElementById("email").value;
+	var password = document.getElementById("password").value;
+	// var password2 = document.getElementById("password2").value;
+
+		
+		// console.log(token)
+		var url = 'http://127.0.0.1:8000/drf_login/';
+		// var formData = new FormData(this);
+
+			fetch(url, {
+				method:'POST',
+				// redirect: 'manual',
+				headers:{
+					'Content-type':'application/json',
+					'X-CSRFToken':csrftoken,
+					
+				},
+				body:JSON.stringify({
+					'email':email,
+					"password":password,
+					'username':email
+				})
+			}
+			).then(function(response){
+				store_response = response;
+				console.log(response);
+				return response.json();
+			}).then(function(data){
+				// console.log('Authorization:'+ 'Token ' +  request.user.auth_token.key  )	
+				document.getElementById('myForm').reset();
+				document.getElementById("message").innerHTML= JSON.stringify(data);
+				// console.log(data.token)
+				if (data.token) {
+
+							(function() {
+								window.location = '{% url "home-page"  %}';
+							})();
+
+							}
+							
+			}).catch(function(error){
+			console.error(error);
+		});
+
+
+
+	}
+			
+	var myForm = document.getElementById("myForm");
+ myForm.addEventListener('submit', fetchcall);
+
+
+
+</script>
+
+
+{% endblock %}

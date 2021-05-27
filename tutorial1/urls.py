@@ -16,8 +16,34 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from Accountsapp import views as account_view
+from django.contrib.auth import views as auth_views
+# from django.conf import settings
+# from django.conf.urls.static import static
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',include('Accountsapp.urls'), name='register'),
-    path('', include('Accountsapp.api.urls'), name = 'account_api')
+    path('app/',include('Accountsapp.urls'), name='register'),
+    path('', include('Accountsapp.api.urls'), name = 'account_api'),
+
+    
+
+    path('showusers/', account_view.show_users, name='showusers'),
+    path('registeruser/', account_view.register_user, name='registeruser'),
+    path('updateuser/', account_view.update_user, name='updateuser'),
+    path('login/', account_view.login_user, name='loginuser'),
+    path('homepage/', account_view.home_page, name = 'home-page'),
+    path('logout/', account_view.logout_user, name='logoutuser'),
+
+    
+    path('password-reset/', auth_views.PasswordResetView.as_view(template_name='Accountsapp/password_reset.html'), name='reset_password'),
+    path('password-reset/done', auth_views.PasswordResetDoneView.as_view(template_name='Accountsapp/password_reset_done.html'), name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/',auth_views.PasswordResetConfirmView.as_view(template_name='Accountsapp/password_reset_confirm.html'),name='password_reset_confirm'),
+    path('password-reset-complete/',auth_views.PasswordResetCompleteView.as_view(template_name='Accountsapp/password_reset_complete.html'), name='password_reset_complete'),
 ]
+
+
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
