@@ -62,11 +62,18 @@ def get_given_user(request, pk):
     except ObjectDoesNotExist:
         return JsonResponse({"missing": "The requested object does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.method == 'GET':  # not necessary here
-        serializer = serializers.RegistrationSerializer(user_profile)
-        token = Token.objects.get(user=user_profile).key
-        return JsonResponse({'given_user_profile': serializer.data, 'token':token})
-   
+    try:
+        if request.method == 'GET':  # not necessary here
+            serializer = serializers.RegistrationSerializer(user_profile)
+            token = Token.objects.get(user=user_profile).key
+            return JsonResponse({'given_user_profile': serializer.data, 'token':token})
+    except ObjectDoesNotExist as e:
+        return JsonResponse({'error': str(e)}, safe=False, status=status.HTTP_404_NOT_FOUND)
+    except Exception:
+        return JsonResponse({'error': 'Something terrible went wrong'}, safe=False, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+
 
 
 # add user
@@ -96,15 +103,13 @@ def update_user(request, pk):
     except ObjectDoesNotExist:
         return Response({'response': "given object does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-    user = request.user
     try:
         data =  {i:j for i,j in request.query_params.items()}
-        print(data)
         serializer = serializers.UpdateSerializer(user_profile, data=data)
         if serializer.is_valid():
-            # print(serializer)
-            user= serializer.save()
-            token, _ = Token.objects.get_or_create(user=user)
+            serializer.save()
+            # MyAccount.objects.filter(id=pk).update(**data)
+            token, _ = Token.objects.get_or_create(user=request.user)
             # print(user.auth_token.key)
             return Response({"response": "success", 'data' :serializer.data}, status=status.HTTP_201_CREATED,  headers={'Authorization': 'Token ' + token.key})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

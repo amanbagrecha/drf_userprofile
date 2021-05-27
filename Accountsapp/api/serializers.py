@@ -28,7 +28,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		password2 = self.validated_data['password2']
 		if password != password2:
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
-		account.set_password(password)
+		account.set_password(password)  # this makes the password hashed
 		account.save()
 		return account
 
@@ -40,7 +40,7 @@ class UpdateSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = MyAccount
 		# mention the fields you want to display when request is sent. 
-		fields = ['id', 'username', 'email']
+		fields = ['id',]
 		extra_kwargs = {
 				'password': {'read_only': True},  # tells django to not display the password for others to see. read_only also means it cannot be changed. 
 		}
@@ -57,12 +57,14 @@ class UpdateSerializer(serializers.ModelSerializer):
 
 
 
-    
+
+
+
 	# def update(self, instance, validated_data):
 
 	# 	instance.email = validated_data.get('email', instance.email)
 	# 	instance.username = validated_data.get('username', instance.username)
-	# 	instance.password = validated_data.get('password', instance.password)
+	# 	# instance.password = validated_data.get('password', instance.password)
 	# 	instance.save()
 	# 	return instance
 
